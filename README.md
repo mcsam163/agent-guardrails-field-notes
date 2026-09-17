@@ -24,6 +24,29 @@ worked and quietly didn't.
   mechanism not reproduced) and is labelled as such. (Previously named `hermes-ops-gaps`;
   the old framing over-claimed that these were undocumented — they are not.)
 
+## What it looks like
+
+```
+guardrail regression — 7 cases (3 block / 3 allow / 0 error, 1 documented gaps)
+  PASS  accidental  accidental: direct write to protected file   exit=2 want=block
+  PASS  legitimate  legit: backup copy (source is protected, ...) exit=0 want=allow
+  GAP   deliberate: path assembled at runtime (string concat)     exit=0 (documented limitation)
+  canary always-allow  → 3 case(s) failed   OK (case set caught it)
+  canary always-deny   → 3 case(s) failed   OK (case set caught it)
+
+all cases behaved as specified
+```
+
+Run the same thing against a case set that cannot fail, and it says so instead of
+passing:
+
+```
+  canary always-deny   → 0 case(s) failed   CASE SET IS BLIND
+
+FAILURES
+  ✗ canary: case set is blind to always-deny: exit=-1 expected=error
+```
+
 ## The checklist
 
 Three copy-pasteable checks. Each exists because the matching failure is silent — the

@@ -20,17 +20,68 @@ jobs:
             --cases skills/guardrail-engineering/scripts/cases.example.json \
             --cmd "python3 skills/guardrail-engineering/scripts/example_gate.py" --mutate
 
-      - name: A blind case set must be reported as blind (rc=1)
+      - name: A blind case set must be reported as blind
         run: |
           if python3 skills/guardrail-engineering/scripts/guardrail_regression.py \
                --cases skills/guardrail-engineering/scripts/cases.blind.json \
                --cmd "python3 skills/guardrail-engineering/scripts/example_gate.py" --mutate; then
-            echo "::error::a blind case set passed — the harness is lying"; exit 1
+            echo "::error::a blind case set passed — the case set (or the harness) is lying"; exit 1
           fi
 
-      - name: --json must emit valid JSON with a truthful exit code
+      # The check below exists because an earlier version of this workflow piped
+      # --json through another process, which swallowed the exit code — so CI stayed
+      # green while --json reported success on failing cases. It is the one property
+      # this repo is about, so it is asserted in Python, without a pipe.
+      - name: --json must tell the truth (exit code, pure JSON, non-empty failures)
+        run: |
+          python3 - <<'PY'
+          import json, subprocess, sys
+
+          def run(cases):
+              return subprocess.run(
+                  ["python3", "skills/guardrail-engineering/scripts/guardrail_regression.py",
+                   "--cases", cases,
+                   "--cmd", "python3 skills/guardrail-engineering/scripts/example_gate.py",
+                   "--mutate", "--json"],
+                  capture_output=True, text=True)
+
+          bad = run("skills/guardrail-engineering/scripts/cases.blind.json")
+          if bad.returncode == 0:
+              sys.exit("::error::a blind case set exited 0 — the harness is lying about failure")
+          d = json.loads(bad.stdout)          # pure JSON or this raises
+          assert d["failed"] >= 1, d
+          assert d["failures"], "failed>0 but failures[] is empty — CI reading `failures` would miss it"
+          assert d["blind_to"], d
+          print("truthful on a failing set:", d["failed"], "failure(s), blind_to =", d["blind_to"])
+
+          good = run("skills/guardrail-engineering/scripts/cases.example.json")
+          assert good.returncode == 0, good.stdout
+          g = json.loads(good.stdout)
+          assert g["failed"] == 0 and g["failures"] == [], g
+          print("truthful on a passing set: failed =", g["failed"])
+          PY
+
+      - name: A gate that crashes is an error, not an approval
         run: |
           python3 skills/guardrail-engineering/scripts/guardrail_regression.py \
-            --cases skills/guardrail-engineering/scripts/cases.example.json \
-            --cmd "python3 skills/guardrail-engineering/scripts/example_gate.py" --mutate --json \
-          | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['failed']==0, d; print('json ok, failed=0')"
+            --cases skills/guardrail-engineering/scripts/cases.error.json \
+            --cmd "python3 -c 'import sys; sys.exit(7)'"
+
+      # `gap: true` is a mute switch by design. Pin the list so that muting a case
+      # is a visible decision that changes this list, never a silent one.
+      - name: The documented-gap list is pinned
+        run: |
+          python3 - <<'PY'
+          import json, subprocess, sys
+          p = subprocess.run(
+              ["python3", "skills/guardrail-engineering/scripts/guardrail_regression.py",
+               "--cases", "skills/guardrail-engineering/scripts/cases.example.json",
+               "--cmd", "python3 skills/guardrail-engineering/scripts/example_gate.py",
+               "--mutate", "--json"], capture_output=True, text=True)
+          d = json.loads(p.stdout)
+          got = sorted(g["name"] for g in d["gaps"])
+          want = ["deliberate: path assembled at runtime (string concat)"]
+          if got != want:
+              sys.exit(f"::error::documented-gap list changed: {got} != {want}")
+          print("gaps pinned:", got)
+          PY

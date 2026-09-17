@@ -1,0 +1,17 @@
+{
+  "comment": "Covers the harness's headline claim: a gate that CRASHES (exit other than 0/2) is not a gate that approved. Run with a command that exits non-zero on purpose.",
+  "cases": [
+    {
+      "name": "gate crashes (exit 7) — must be classified as error",
+      "kind": "error",
+      "expect": "error",
+      "event": {
+        "tool_name": "write_file",
+        "tool_input": {
+          "path": "/srv/protected/MEMORY.md",
+          "content": "x"
+        }
+      }
+    }
+  ]
+}

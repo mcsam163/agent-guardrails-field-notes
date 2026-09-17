@@ -60,8 +60,8 @@ This inverts the usual approach and it's strictly better for one reason: it does
 not need to understand *how* the write happened. Variable indirection, reflection,
 a subprocess, another process entirely — irrelevant. Observe the artifact.
 
-Implementation notes from ours (~120 lines, no dependencies — **not shipped here**; this
-repo contains the harness, not our gate):
+Implementation notes from ours (no dependencies; **our gate is not shipped here** — this repo
+contains the harness, not the gate it was built for):
 
 - store `{path: sha256}` in a small state file; compare after each call;
 - whitelist the legitimate writers explicitly (`memory` tool, the user, a sanctioned
