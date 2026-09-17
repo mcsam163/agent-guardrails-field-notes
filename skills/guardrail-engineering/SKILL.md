@@ -1,6 +1,7 @@
 ---
 name: guardrail-engineering
-description: Use when you are building or auditing a guardrail/gate that is supposed to stop an agent (or a script) from doing something — file protection, command blocking, policy enforcement. Four rules for telling whether the guardrail actually guards, plus a regression harness to prove it.
+description: Use when a guardrail may be lying about what it blocks. Four rules for telling whether a gate actually guards, plus a dependency-free regression harness.
+
 ---
 
 # Guardrail engineering: how to tell whether your gate guards anything

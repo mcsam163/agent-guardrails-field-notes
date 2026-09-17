@@ -1,6 +1,7 @@
 ---
 name: hermes-silent-failures
-description: Use when a self-hosted Hermes Agent reports success while something quietly did not happen — a hook that never fires, a bundled skill that stopped receiving updates, staged memory writes that vanished. All three are documented upstream; this is what they look like in practice and the exact checks that catch them.
+description: Use when Hermes reports success while nothing happened — hooks that never fire, bundled skills that stopped updating, queued writes that vanished.
+
 ---
 
 # Three ways a Hermes Agent stays quiet while doing nothing

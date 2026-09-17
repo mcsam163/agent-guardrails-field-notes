@@ -1,0 +1,36 @@
+name: test
+
+on: [push, pull_request]
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Syntax check
+        run: python3 -m py_compile skills/guardrail-engineering/scripts/*.py
+
+      - name: Harness passes against the example gate (canaries must fire)
+        run: |
+          python3 skills/guardrail-engineering/scripts/guardrail_regression.py \
+            --cases skills/guardrail-engineering/scripts/cases.example.json \
+            --cmd "python3 skills/guardrail-engineering/scripts/example_gate.py" --mutate
+
+      - name: A blind case set must be reported as blind (rc=1)
+        run: |
+          if python3 skills/guardrail-engineering/scripts/guardrail_regression.py \
+               --cases skills/guardrail-engineering/scripts/cases.blind.json \
+               --cmd "python3 skills/guardrail-engineering/scripts/example_gate.py" --mutate; then
+            echo "::error::a blind case set passed — the harness is lying"; exit 1
+          fi
+
+      - name: --json must emit valid JSON with a truthful exit code
+        run: |
+          python3 skills/guardrail-engineering/scripts/guardrail_regression.py \
+            --cases skills/guardrail-engineering/scripts/cases.example.json \
+            --cmd "python3 skills/guardrail-engineering/scripts/example_gate.py" --mutate --json \
+          | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['failed']==0, d; print('json ok, failed=0')"

@@ -1,0 +1,17 @@
+{
+  "comment": "A deliberately BLIND case set (block cases only). CI asserts the harness reports it as blind instead of passing it. Do not 'fix' this file.",
+  "cases": [
+    {
+      "name": "only a block case — nothing can fail here",
+      "kind": "accidental",
+      "expect": "block",
+      "event": {
+        "tool_name": "write_file",
+        "tool_input": {
+          "path": "/srv/protected/MEMORY.md",
+          "content": "x"
+        }
+      }
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # Agent Guardrails: Field Notes
 
+![test](https://github.com/mcsam163/agent-guardrails-field-notes/actions/workflows/test.yml/badge.svg)
+
 Two skills distilled from running Hermes Agent in production for months — and from
 the mistakes we made while building its guardrails.
 
@@ -21,6 +23,24 @@ worked and quietly didn't.
   check that catches it. One entry is an **unresolved observation** (symptom real,
   mechanism not reproduced) and is labelled as such. (Previously named `hermes-ops-gaps`;
   the old framing over-claimed that these were undocumented — they are not.)
+
+## The checklist
+
+Three copy-pasteable checks. Each exists because the matching failure is silent — the
+system keeps reporting success while nothing happens.
+
+```bash
+# 1. Are your hooks actually running? Configuring a hook is not registering it, and the
+#    allowlist stores the script's mtime (not a hash) — so an edited script may be running
+#    code nobody approved.
+hermes hooks list && hermes hooks doctor
+
+# 2. Has a bundled skill quietly stopped receiving upstream updates?
+hermes skills list-modified
+
+# 3. Before and after any memory-approval cycle: count, do not assume.
+ls ~/.hermes/pending/memory/ | wc -l
+```
 
 ## Why "does not lie" is the whole point
 

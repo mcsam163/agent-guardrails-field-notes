@@ -1,5 +1,5 @@
 {
-  "comment": "One case per rule. 'expect' is what the GATE should do (block=exit 2, allow=exit 0, error=any other exit). 'gap': true marks a case that documents a KNOWN LIMITATION rather than desired behaviour — gap cases are reported but never fail the run, so fixing the limitation does not look like a regression. Deliberate-bypass cases stay gap=true while the gate is a text heuristic: the honest claim is 'stops accidents, not adversaries', and those writes are covered by after-the-fact artifact verification instead (see Rule 2 of the skill).",
+  "comment": "One case per rule. 'expect' is what the GATE should do (block=exit 2, allow=exit 0, error=any other exit). 'gap': true marks a case that documents a KNOWN LIMITATION rather than desired behaviour — gap cases are reported but never fail the run, so fixing the limitation does not look like a regression. Deliberate-bypass cases stay gap=true while the gate is a text heuristic: the honest claim is 'stops accidents, not adversaries', and those writes are covered by after-the-fact artifact verification instead (see Rule 2 of the skill). The deliberate case builds its path by concatenation on purpose: a text gate never sees the literal protected path.",
   "cases": [
     {
       "name": "accidental: direct write to protected file",
@@ -70,14 +70,14 @@
       }
     },
     {
-      "name": "deliberate: path held in a variable",
+      "name": "deliberate: path assembled at runtime (string concat)",
       "kind": "deliberate",
       "expect": "allow",
       "note": "documented gap of text-based gates — expected to be caught by Rule 2 detection, not here",
       "event": {
         "tool_name": "execute_code",
         "tool_input": {
-          "code": "p='/srv/protected/MEMORY.md'\nopen(p,'w').write('x')"
+          "code": "p = '/srv/prot' + 'ected/MEMORY.md'\nopen(p, 'w').write('x')"
         }
       },
       "gap": true
