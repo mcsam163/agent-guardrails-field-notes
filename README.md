@@ -10,7 +10,7 @@ worked and quietly didn't.
 ## What's inside
 
 - **`guardrail-engineering`** — how to tell whether your guardrail actually guards.
-  Four rules we learned the hard way, plus a dependency-free regression harness (~135 lines) that tests
+  Four rules we learned the hard way, plus a dependency-free regression harness that tests
   your gates against two classes of input: *accidental* violations (casual mistakes)
   and *deliberate* bypasses (someone — or some future model — actively trying to get
   around the rule). Scope: gates that decide by exit code on a single call
@@ -39,13 +39,20 @@ Anyone who has wired an LLM agent to something they care about (memory files, cr
 deploy steps, money) and put a "guard" in front of it. If your guard is a regex, a prompt
 instruction, or a hook that mostly works — start with `guardrail-engineering`.
 
+> **Verified on Hermes v0.21.x, September 2026.** Commands, flags and file paths are
+> version-sensitive. If you are on a different version, check before trusting them.
+
 ## Using these
 
 Both are plain `SKILL.md` folders — no install step, no runtime:
 
 ```bash
-cp -r skills/guardrail-engineering ~/.hermes/skills/
-cp -r skills/hermes-silent-failures ~/.hermes/skills/
+# native install (verified on Hermes v0.21.x)
+hermes skills install mcsam163/agent-guardrails-field-notes/skills/guardrail-engineering
+hermes skills install mcsam163/agent-guardrails-field-notes/skills/hermes-silent-failures
+
+# or just copy the folders anywhere your agent loads skills from
+cp -r skills/guardrail-engineering skills/hermes-silent-failures ~/.hermes/skills/
 ```
 
 Then ask your agent for the skill by name, or read them yourself. The regression

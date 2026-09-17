@@ -5,6 +5,8 @@ description: Use when you are building or auditing a guardrail/gate that is supp
 
 # Guardrail engineering: how to tell whether your gate guards anything
 
+*Verified on Hermes v0.21.x, September 2026.*
+
 Written after shipping a protection gate that looked correct, passed review, and
 then got bypassed in three lines by an independent reviewer.
 
@@ -97,8 +99,8 @@ Whichever you choose, three things must hold:
    were correctly declared in config but never registered, because registration
    happens at startup and the long-running process had loaded the older config —
    with no error and no log line. Ship a health check (`<tool> doctor`-style) that
-   asserts: registered, allowlisted/permitted, script hash matches, and the gate
-   actually fires on a canary.
+   asserts: registered, allowlisted/permitted, script **mtime** matches the approved
+   snapshot (the platform stores mtime, not a hash), and the gate actually fires on a canary.
 
 ---
 

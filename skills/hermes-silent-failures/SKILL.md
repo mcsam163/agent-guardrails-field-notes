@@ -5,6 +5,8 @@ description: Use when a self-hosted Hermes Agent reports success while something
 
 # Three ways a Hermes Agent stays quiet while doing nothing
 
+*Verified on Hermes v0.21.x, September 2026.*
+
 **Read this first: all of this is documented upstream.** We are not claiming to have
 found undocumented behaviour. We are claiming the opposite, and it is the whole point of
 this file: the documentation is correct, we read it, and we still lost time to each of
@@ -90,9 +92,15 @@ pending after : ['dc52ab25.json']      RECORD KEPT? True
 
 So our working theory ("the applier deletes what it cannot parse") is **wrong for this
 version**, or applies to a path we did not hit. The loss was real; the mechanism is not
-established. A plausible neighbour exists in the same snapshot
-(`tests/gateway/test_73297_memory_flush_on_reset.py`, "pending memory write lost across
-reset"), which we have not chased down.
+proven.
+
+**The most plausible neighbour we found (not proven).** Upstream #73297 — "pending memory
+write lost across reset". In the version we run, the flush lives in `gateway/run_shutdown.py`
+(`_mm.flush_pending(timeout=10)`), and a regression test ships with it
+(`tests/gateway/test_73297_memory_flush_on_reset.py`) whose docstring describes a
+bounded-drain abandonment in which already-queued writes are dropped — matching the symptom.
+We have not established causation and are not claiming a bug here, only pointing at where we
+would look next. **Check your own version before assuming you are affected.**
 
 **What we do now, regardless of the mechanism.**
 - count `~/.hermes/pending/memory/` before and after any approve cycle;

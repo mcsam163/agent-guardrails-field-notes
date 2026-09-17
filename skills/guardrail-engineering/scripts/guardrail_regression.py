@@ -140,9 +140,17 @@ def main():
             result["failed"] = len(failures)
 
     if a.json:
+        # stdout must be *only* the JSON document when --json is asked for, and the
+        # exit code must reflect reality. (An earlier version printed a human
+        # "all cases behaved as specified" line here and returned 0 — i.e. a checker
+        # that lied, which is precisely what this repo is about.)
+        result["failures"] = [{"name": c["name"], "exit": code, "expect": c["expect"]}
+                              for c, code, _ in failures]
+        result["failed"] = len(failures)
         print(json.dumps(result, ensure_ascii=False))
+        return 1 if failures else 0
 
-    if failures and not a.json:
+    if failures:
         print("\nFAILURES")
         for c, code, out in failures:
             print(f"  ✗ {c['name']}: exit={code} expected={c['expect']}")
