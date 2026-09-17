@@ -26,21 +26,29 @@ worked and quietly didn't.
 
 ## What it looks like
 
-```
+Verbatim output — no editing, that is the point:
+
+```text
 guardrail regression — 7 cases (3 block / 3 allow / 0 error, 1 documented gaps)
   PASS  accidental  accidental: direct write to protected file   exit=2 want=block
-  PASS  legitimate  legit: backup copy (source is protected, ...) exit=0 want=allow
-  GAP   deliberate: path assembled at runtime (string concat)     exit=0 (documented limitation)
+  PASS  accidental  accidental: shell append to protected file   exit=2 want=block
+  PASS  accidental  accidental: naive script write               exit=2 want=block
+  PASS  legit       legit: read the protected file               exit=0 want=allow
+  PASS  legit       legit: backup copy (source is protected, target is not) exit=0 want=allow
+  PASS  legit       legit: unrelated write                       exit=0 want=allow
+  GAP   deliberate: path assembled at runtime (string concat) exit=0 (documented limitation — never fails the run)
   canary always-allow  → 3 case(s) failed   OK (case set caught it)
   canary always-deny   → 3 case(s) failed   OK (case set caught it)
 
 all cases behaved as specified
 ```
 
-Run the same thing against a case set that cannot fail, and it says so instead of
-passing:
+Run the same thing against a case set that cannot fail, and it says so instead of passing:
 
-```
+```text
+guardrail regression — 1 cases (1 block / 0 allow / 0 error, 0 documented gaps)
+  PASS  accidental  only a block case — nothing can fail here    exit=2 want=block
+  canary always-allow  → 1 case(s) failed   OK (case set caught it)
   canary always-deny   → 0 case(s) failed   CASE SET IS BLIND
 
 FAILURES

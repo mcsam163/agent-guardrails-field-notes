@@ -83,5 +83,10 @@ jobs:
           want = ["deliberate: path assembled at runtime (string concat)"]
           if got != want:
               sys.exit(f"::error::documented-gap list changed: {got} != {want}")
-          print("gaps pinned:", got)
+          # Pin the case composition too: deleting a failing case is otherwise the
+          # cheapest way to make a red case set green, and nothing would notice.
+          if (d["cases"], d["judged"]) != (7, 6):
+              sys.exit(f"::error::case composition changed: {d['cases']} cases / "
+                       f"{d['judged']} judged, expected 7 / 6")
+          print("gaps pinned:", got, "| cases:", d["cases"], "judged:", d["judged"])
           PY
