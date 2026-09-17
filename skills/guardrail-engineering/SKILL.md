@@ -25,9 +25,9 @@ Real numbers from our own gate (a memory-file protection hook, matched on
 
 | | count |
 |---|---|
-| accidental direct writes blocked | yes, reliably (that was the actual risk) |
-| deliberate bypasses found by a reviewer in 20 minutes | 16 |
-| false positives that blocked legitimate work | 6 |
+| accidental direct writes stopped | yes — this was the actual risk, and this is what the gate was worth |
+| deliberate bypasses found by one independent reviewer in one pass | 16 **(a lower bound, not a total)** |
+| false positives that blocked legitimate work, same period | 6 |
 
 Bypasses that walked straight through included: assigning the path to a variable
 first, `os.path.join`, `open(path, mode='w')` with a keyword argument,
@@ -57,7 +57,8 @@ This inverts the usual approach and it's strictly better for one reason: it does
 not need to understand *how* the write happened. Variable indirection, reflection,
 a subprocess, another process entirely — irrelevant. Observe the artifact.
 
-Implementation notes from ours (~120 lines total, no dependencies):
+Implementation notes from ours (~120 lines, no dependencies — **not shipped here**; this
+repo contains the harness, not our gate):
 
 - store `{path: sha256}` in a small state file; compare after each call;
 - whitelist the legitimate writers explicitly (`memory` tool, the user, a sanctioned
@@ -105,7 +106,8 @@ Whichever you choose, three things must hold:
 
 A gate without tests is a comment. Keep it small:
 
-- one assertion per rule;
+- one assertion per rule **that is expressible as a single call** — see the scope note
+  below for the ones that are not;
 - two sample classes per rule: **accidental** (must block) and **deliberate**
   (must at least be detected afterwards);
 - assert on the *effect*, not the intent: for a preventive gate, that the call is
@@ -117,9 +119,15 @@ Two properties that are easy to forget:
    correct while the hook was not registered at all. Assert the configuration too
    (matcher contains the expected tool, allowlist entry exists, state file is
    watched).
-2. **Canary the harness.** Run it once against a deliberately gutted copy of the
-   gate (always-allow, and always-deny). If the suite still passes, the suite tests
-   nothing. `scripts/guardrail_regression.py --mutate` does exactly this.
+2. **Canary the harness.** `--mutate` re-runs your cases against two degenerate
+   gates it synthesises — one that always allows, one that always denies — and fails
+   if your case set passes both. If it does, your cases are **blind**.
+   Be precise about what that proves: it disproves a case set with no blocking cases
+   or no allowing cases. It does **not** tell you your cases describe the right
+   behaviour, and it is not a mutant of *your* gate. `--mutate` is worth running; it
+   is not a proof of correctness, and an earlier version of this script crashed
+   instead of reporting on exactly this path — which is how we learned to test the
+   failure path of the thing that tests failures.
 
 ---
 
@@ -131,8 +139,20 @@ python3 scripts/guardrail_regression.py --cases cases.json --cmd 'python3 /path/
 python3 scripts/guardrail_regression.py --cases cases.json --cmd '...' --mutate
 ```
 
+The example case set (`cases.example.json`) deliberately covers only Rule 1 shapes: it is
+a worked example of the format, not a complete suite. Rule 2 (detection) and Rule 3
+(a gate that crashed) need their own checks — the former by mutating the artifact and
+asserting your detector notices, the latter with an `"expect": "error"` case.
+
 The harness speaks the simplest possible contract, so it fits most hook systems:
 **one JSON object on stdin, exit code 2 = block, exit 0 = allow, anything else = error.**
+Expectations are `block` / `allow` / `error` (a gate that crashed is not a gate that
+approved). Mark a case `"gap": true` when it documents a known limitation instead of
+desired behaviour — gap cases are reported but never fail the run.
+
+Scope, restated: this tests the exit-code contract of a **single call**. A detector
+that works by comparing artifacts out-of-band (Rule 2) is not testable this way —
+test it by mutating the artifact and asserting your detector notices.
 
 ---
 

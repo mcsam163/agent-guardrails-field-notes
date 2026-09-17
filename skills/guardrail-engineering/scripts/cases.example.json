@@ -1,5 +1,5 @@
 {
-  "comment": "One case per rule. 'expect' is what the GATE should do (block=exit 2, allow=exit 0). Deliberate-bypass cases are marked expect=allow ON PURPOSE when the gate is a text heuristic: the honest claim is 'stops accidents, not adversaries', and those writes are covered by after-the-fact artifact verification instead (see Rule 2).",
+  "comment": "One case per rule. 'expect' is what the GATE should do (block=exit 2, allow=exit 0, error=any other exit). 'gap': true marks a case that documents a KNOWN LIMITATION rather than desired behaviour — gap cases are reported but never fail the run, so fixing the limitation does not look like a regression. Deliberate-bypass cases stay gap=true while the gate is a text heuristic: the honest claim is 'stops accidents, not adversaries', and those writes are covered by after-the-fact artifact verification instead (see Rule 2 of the skill).",
   "cases": [
     {
       "name": "accidental: direct write to protected file",
@@ -79,7 +79,8 @@
         "tool_input": {
           "code": "p='/srv/protected/MEMORY.md'\nopen(p,'w').write('x')"
         }
-      }
+      },
+      "gap": true
     }
   ]
 }

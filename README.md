@@ -10,14 +10,17 @@ worked and quietly didn't.
 ## What's inside
 
 - **`guardrail-engineering`** — how to tell whether your guardrail actually guards.
-  Four rules we learned the hard way, plus a ~60-line regression harness that tests
+  Four rules we learned the hard way, plus a dependency-free regression harness (~135 lines) that tests
   your gates against two classes of input: *accidental* violations (casual mistakes)
   and *deliberate* bypasses (someone — or some future model — actively trying to get
-  around the rule).
+  around the rule). Scope: gates that decide by exit code on a single call
+  (shell-script hooks and friends).
 
-- **`hermes-ops-gaps`** — three Hermes-specific behaviours that the official docs do
-  not (yet) spell out, each with a reproduction. Deliberately short: everything else
-  we hit is already documented upstream, so repeating it here would just rot.
+- **`hermes-silent-failures`** — three Hermes behaviours that are *documented*, and that
+  still cost us time, because when they bite the system looks fine. Each with the exact
+  check that catches it. One entry is an **unresolved observation** (symptom real,
+  mechanism not reproduced) and is labelled as such. (Previously named `hermes-ops-gaps`;
+  the old framing over-claimed that these were undocumented — they are not.)
 
 ## Why "does not lie" is the whole point
 
@@ -42,7 +45,7 @@ Both are plain `SKILL.md` folders — no install step, no runtime:
 
 ```bash
 cp -r skills/guardrail-engineering ~/.hermes/skills/
-cp -r skills/hermes-ops-gaps      ~/.hermes/skills/
+cp -r skills/hermes-silent-failures ~/.hermes/skills/
 ```
 
 Then ask your agent for the skill by name, or read them yourself. The regression
@@ -54,14 +57,17 @@ python3 skills/guardrail-engineering/scripts/guardrail_regression.py \
   --cmd 'python3 /path/to/your/gate.py' --mutate
 ```
 
-`--mutate` is the part that matters: it re-runs your cases against a deliberately
-gutted gate (always-allow and always-deny) and fails if your cases don't notice.
+`--mutate` re-runs your cases against two degenerate gates it synthesises (always-allow,
+always-deny) and fails if your case set passes both — i.e. if it cannot tell a working
+gate from a broken one. It disproves a *blind* case set; it is not proof your cases are right.
 
 ## Provenance
 
-Written while operating a self-hosted Hermes Agent. Every claim in these files is
-something we hit, fixed, and then re-tested — the counts, the bypass list, and the
-canary behaviour are from those runs, not from a plausibility argument.
+Written while operating a self-hosted Hermes Agent (v0.21.x). The numbers, the bypass
+list and the failure paths come from those runs. Where something did **not** hold up under
+re-testing, the text says so: the memory-queue entry is an observation we could not
+reproduce a mechanism for, and the harness documents its own earlier crash. Corrections
+welcome as issues.
 
 ## License
 
